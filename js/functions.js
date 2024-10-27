@@ -40,6 +40,26 @@ getDigits(2023);
 getDigits(-1);
 getDigits(1.5);
 
+const checkMeetengTime = (startWork,endWork, startMeeting, meetingDuration) => {
+  const [startWorkHour, startWorkMinute] = startWork.split(':').map((num) => parseInt(num, 10));
+  const [endWorkHour, endWorkMinute] = endWork.split(':').map((num) => parseInt(num, 10));
+  const [startMeetingHour, startMeetingMinute] = startMeeting.split(':').map((num) => parseInt(num, 10));
+  const startWorkInMinutes = startWorkHour * 60 + startWorkMinute;
+  const endWorkInMinutes = endWorkHour * 60 + endWorkMinute;
+  const startMeetingInMinutes = startMeetingHour * 60 + startMeetingMinute;
+
+  const endMeetingInMinutes = startMeetingInMinutes + meetingDuration;
+
+  return startMeetingInMinutes >= startWorkInMinutes && endMeetingInMinutes <= endWorkInMinutes;
+
+};
+
+checkMeetengTime('08:00', '17:30', '14:00', 90);
+checkMeetengTime('8:0', '10:0', '8:0', 120);
+checkMeetengTime('08:00', '14:30', '14:00', 90);
+checkMeetengTime('14:00', '17:30', '08:0', 90);
+checkMeetengTime('8:00', '17:30', '08:00', 900);
+
 const getRandomNumber = (a, b) => {
   const lower = Math.ceil(Math.min(a, b));
   const upper = Math.floor(Math.max(a, b));
