@@ -1,4 +1,4 @@
-import {getRandomNumber, getRandomObjectArray, createIdGenerator, getRandomArrayElement} from './functions.js';
+import {getRandomNumber, getRandomObjectArray, createIdGenerator, getRandomArrayElement} from './util.js';
 
 const COMMENT_SEQUENCES = [
   'Всё отлично!', 'В целом всё неплохо.', 'Но не всё.',
