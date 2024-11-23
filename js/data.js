@@ -54,6 +54,6 @@ const createPhotoMeta = () => {
   return photo;
 };
 
-const createPhotos = () => getRandomObjectArray(createPhotoMeta, 25);
+const createPhotos = () => Array.from({length: PHOTO_COUNT}, createPhotoMeta);
 
 export {createPhotos};

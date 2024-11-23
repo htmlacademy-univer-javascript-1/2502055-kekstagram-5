@@ -1,4 +1,5 @@
 import {createPhotos} from './data.js';
+import {openPreview} from './fullscreen-view.js';
 
 const photos = createPhotos();
 const photoTemplate = document.querySelector('#picture')
@@ -17,6 +18,11 @@ photos.forEach(({url, description, likes, comments}) => {
     .querySelector('.picture__comments').textContent = comments.length;
 
   photosFragment.appendChild(photo);
+  photo.addEventListener('click', (evt) => {
+    evt.preventDefault();
+    openPreview(url, description, likes, comments);
+  });
 });
 
 photosContainer.appendChild(photosFragment);
+
