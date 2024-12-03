@@ -4,6 +4,7 @@ const commentsList = containerMeta.querySelector('.social__comments');
 const closeButton = fullscreenContainer.querySelector('.big-picture__cancel');
 const commentsLoader = containerMeta.querySelector('.social__comments-loader');
 const currentCommentsLoaded = containerMeta.querySelector('.current-count');
+const COMMENTS_PER_LOAD = 5;
 let wrapper;
 
 const loadComment = (comment) => {
@@ -22,24 +23,28 @@ const handleLoaderVisibility = (totalCount) => {
 const insertComments = (comments) => {
   commentsList.innerHTML = '';
 
-  for (let i = 0; i < Math.min(comments.length, 5); ++i) {
+  for (let i = 0; i < Math.min(comments.length, COMMENTS_PER_LOAD); ++i) {
     loadComment(comments[i]);
   }
   handleLoaderVisibility(comments.length, commentsList.children.length);
 
   const onLoaderClick = () => {
     const currentCount = commentsList.children.length;
-    for (let i = currentCount; i < currentCount + Math.min(5, comments.length - currentCount); ++i) {
+    for (let i = currentCount; i < currentCount + Math.min(COMMENTS_PER_LOAD, comments.length - currentCount); ++i) {
       loadComment(comments[i]);
     }
     handleLoaderVisibility(comments.length, commentsList.children.length);
   };
+
   wrapper = onLoaderClick;
 
   commentsLoader.addEventListener('click', wrapper);
 };
 
 const drawBigPicture = (url, description, likes, comments) => {
+  if (!url || !comments) {
+    return;
+  }
   fullscreenContainer.querySelector('.big-picture__img')
     .querySelector('img').src = url;
   containerMeta.querySelector('.social__header')
@@ -62,7 +67,12 @@ function closeFullview() {
   fullscreenContainer.classList.add('hidden');
   document.removeEventListener('keydown', onDocumentKeydown);
   document.body.classList.remove('modal-open');
-  commentsLoader.removeEventListener('click', wrapper);
+  if (wrapper) {
+    commentsLoader.removeEventListener('click', wrapper);
+    wrapper = null;
+  }
+
+  commentsList.innerHTML = '';
 }
 
 closeButton.addEventListener('click', () => {
