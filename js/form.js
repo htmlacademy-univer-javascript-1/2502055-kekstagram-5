@@ -1,3 +1,5 @@
+import { uploadPhoto } from './load.js';
+
 const imageForm = document.querySelector('.img-upload__form');
 const uploadModal = document.querySelector('.img-upload__overlay');
 const uploadInput = document.querySelector('.img-upload__input');
@@ -23,6 +25,11 @@ const SCALE_DIFFERENCE = 25;
 const MIN_SCALE = 25;
 const MAX_SCALE = 100;
 const sliderElement = document.querySelector('.effect-level__slider');
+const submitButton = document.querySelector('.img-upload__submit');
+const SubmitButtonText = {
+  IDLE: 'Опубликовать',
+  SENDING: 'Публикую...'
+};
 
 class Filter {
   constructor(name, min, max, step) {
@@ -71,6 +78,13 @@ const operateSliderValue = (filter) => {
   return `${sliderElement.noUiSlider.get()}`;
 };
 
+const setDefaultFilter = () => {
+  sliderElement.parentElement.classList.add('hidden');
+  imagePreview.style.filter = '';
+  effectLevel.value = DEFAULT_VOLUME;
+  document.querySelector('#effect-none').checked = true;
+};
+
 const onFilterClick = (evt) => {
   if (evt.target.matches('input[type=radio]')) {
     if (evt.target.id !== 'effect-none') {
@@ -89,9 +103,7 @@ const onFilterClick = (evt) => {
         effectLevel.value = operateSliderValue(filter) / filter.max * 100;
       });
     } else {
-      sliderElement.parentElement.classList.add('hidden');
-      imagePreview.style.filter = '';
-      effectLevel.value = DEFAULT_VOLUME;
+      setDefaultFilter();
     }
   }
 };
@@ -99,17 +111,29 @@ const onFilterClick = (evt) => {
 const addFilters = () => filterButtonList.addEventListener('click', onFilterClick);
 
 const validateHashTagsField = (value) => {
-  hashTagsField.value = value.trim();
   const hashtags = value.toLowerCase()
     .split(' ')
     .filter((x) => x);
-
-  const isUniqie = new Set(hashtags).size === hashtags.length;
-
-  return hashtags.every((tag) => HASHTAG_SAMPLE.test(tag)) && hashtags.length <= MAX_HASHTAGS_COUNT && isUniqie;
+  return hashtags.every((tag) => HASHTAG_SAMPLE.test(tag));
 };
 
-pristine.addValidator(hashTagsField, validateHashTagsField, 'Непонятные хештеги');
+const isUniqie = (value) => {
+  const hashtags = value.toLowerCase()
+    .split(' ')
+    .filter((x) => x);
+  return new Set(hashtags).size === hashtags.length;
+};
+
+const isCountValid = (value) => {
+  const hashtags = value.toLowerCase()
+    .split(' ')
+    .filter((x) => x);
+  return hashtags.length <= MAX_HASHTAGS_COUNT;
+};
+
+pristine.addValidator(hashTagsField, isCountValid, 'Слишком много хэш-тегов');
+pristine.addValidator(hashTagsField, isUniqie, 'Повтор хэш-тега');
+pristine.addValidator(hashTagsField, validateHashTagsField, 'Невалидный хэш-тег');
 
 const isOnFocus = (elementClass) => document.activeElement.classList.contains(`${elementClass}`);
 
@@ -138,16 +162,17 @@ const openModal = () => {
 };
 
 function closeModal(){
-  uploadModal.classList.add('hidden');
-  document.body.classList.remove('modal-open');
   uploadInput.value = '';
   descriptionField.value = '';
   hashTagsField.value = '';
   scaleOutput.value = '100%';
+  setDefaultFilter();
+  uploadModal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
   document.removeEventListener('keydown', onDocumentKeydown);
   exitButton.removeEventListener('click', closeModal);
-  scaleAddButton.addEventListener('click', operateScale);
-  scaleDecreaseButton.addEventListener('click', operateScale);
+  scaleAddButton.removeEventListener('click', operateScale);
+  scaleDecreaseButton.removeEventListener('click', operateScale);
   filterButtonList.removeEventListener('click', onFilterClick);
 }
 
@@ -160,9 +185,73 @@ exitButton.addEventListener('click', () => {
   closeModal();
 });
 
-imageForm.addEventListener('submit', (evt) => {
-  const isValide = pristine.validate();
-  if(!isValide){
-    evt.preventDefault();
+const blockSubmitButton = () => {
+  submitButton.disabled = true;
+  submitButton.textContent = SubmitButtonText.SENDING;
+};
+
+const unblockSubmitButton = () => {
+  submitButton.disabled = false;
+  submitButton.textContent = SubmitButtonText.IDLE;
+};
+
+let onModalClick;
+
+const deleteResultMessage = () => {
+  const messageSuccess = document.querySelector('.success');
+  const messageError = document.querySelector('.error');
+  let addedMessage;
+  if (messageSuccess) {
+    addedMessage = messageSuccess;
+  } else if (messageError) {
+    addedMessage = messageError;
   }
-});
+
+  addedMessage.remove();
+  document.removeEventListener('keydown', onModalKeydown);
+  document.removeEventListener('click', onModalClick);
+};
+
+function onModalKeydown(evt) {
+  if (evt.key === 'Escape') {
+    deleteResultMessage();
+  }
+}
+
+const showResultMessage = (templateId) => {
+  const messageTemplate = document.querySelector(`#${templateId}`).content;
+  const message = messageTemplate.cloneNode(true);
+  const messageFragment = document.createDocumentFragment();
+  messageFragment.appendChild(message);
+  document.body.appendChild(messageFragment);
+  const btn = document.querySelector(`.${templateId}__button`);
+  const addedMessage = document.querySelector(`.${templateId}`);
+  document.addEventListener('keydown', onModalKeydown);
+  onModalClick = (evt) => {
+    if (evt.target === addedMessage || evt.target === btn) {
+      deleteResultMessage();
+    }
+  };
+  document.addEventListener('click', onModalClick);
+};
+
+
+const setFormSubmit = () => {
+  {
+    imageForm.addEventListener('submit', (evt) => {
+      evt.preventDefault();
+      if(pristine.validate()){
+        blockSubmitButton();
+        uploadPhoto(new FormData(evt.target))
+          .then(showResultMessage('success'))
+          .then(closeModal())
+          .catch(() => {
+            showResultMessage('error');
+          })
+          .finally(unblockSubmitButton());
+      }
+    });
+  }
+};
+
+export {setFormSubmit};
