@@ -1,5 +1,6 @@
 import { uploadPhoto } from './load.js';
 import { showResultMessage } from './util.js';
+import { setPreview } from './image.js';
 
 const imageForm = document.querySelector('.img-upload__form');
 const uploadModal = document.querySelector('.img-upload__overlay');
@@ -159,6 +160,7 @@ const openModal = () => {
   exitButton.addEventListener('click', closeModal);
   scaleAddButton.addEventListener('click', operateScale);
   scaleDecreaseButton.addEventListener('click', operateScale);
+  setPreview();
   addFilters();
 };
 
