@@ -36,8 +36,10 @@ const toggleButtons = (buttons, activeId) => {
   }
 };
 
+const isEscapeKey = (evt) => evt.key === 'Escape';
+
 const onModalKeydown = (evt) => {
-  if (evt.key === 'Escape') {
+  if (isEscapeKey(evt)) {
     deleteResultMessage();
   }
 };
@@ -91,4 +93,4 @@ const debounce = (callback, timeoutDelay) => {
   };
 };
 
-export {showResultMessage, alertError, takeRandomElements, toggleButtons, debounce, createRandomGenerator};
+export {showResultMessage, alertError, takeRandomElements, toggleButtons, debounce, createRandomGenerator, isEscapeKey};
