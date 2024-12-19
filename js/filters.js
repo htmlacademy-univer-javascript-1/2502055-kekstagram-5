@@ -2,6 +2,7 @@ import { drawPhotos, deletePhotos } from './draw-photos.js';
 import { debounce, takeRandomElements, createRandomGenerator } from './util.js';
 import { photos } from './main.js';
 
+const TIMEOUT_DELAY = 500;
 const RANDOM_PHOTOS_LENGTH = 10;
 const FILTERS = {
   'filter-default': () => photos,
@@ -20,7 +21,7 @@ const onImgFiltersFormClick = debounce((evt) => {
     deletePhotos();
     drawPhotos(FILTERS[evt.target.id]());
   }
-});
+}, TIMEOUT_DELAY);
 
 const onButtonCLick = (evt) => {
   if (isButton(evt)) {
