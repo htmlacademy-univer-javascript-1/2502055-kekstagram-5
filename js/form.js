@@ -1,5 +1,4 @@
 import { uploadPhoto } from './load.js';
-import { showResultMessage } from './util.js';
 import { setPreview } from './image.js';
 
 const imageForm = document.querySelector('.img-upload__form');
@@ -147,7 +146,6 @@ const onDocumentKeydown = (evt) => {
 
 const validateComments = (value) => {
   value = value.trim();
-  descriptionField.value = value;
   return value.length <= 140;
 };
 
@@ -205,11 +203,7 @@ const setFormSubmit = () => {
     if(isValid){
       blockSubmitButton();
       uploadPhoto(new FormData(evt.target))
-        .then(() => {
-          closeModal();
-          showResultMessage('success');
-        })
-        .catch(() => showResultMessage('error'))
+        .then(() => closeModal())
         .finally(() => unblockSubmitButton());
     }
   });
