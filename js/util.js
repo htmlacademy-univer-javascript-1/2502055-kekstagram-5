@@ -80,7 +80,7 @@ const showResultMessage = (templateId) => {
 const alertError = () => {
   showModal('error');
   document.querySelector('.error__title').textContent = 'Ошибка подключения к серверу';
-  document.querySelector('.error__button').style.display = 'none';
+  document.querySelector('.error__button').remove();
 };
 
 const debounce = (callback, timeoutDelay = 500) => {
