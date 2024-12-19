@@ -61,22 +61,26 @@ function deleteResultMessage () {
 
 }
 
-const showResultMessage = (templateId) => {
+const showModal = (templateId) => {
   const messageTemplate = document.querySelector(`#${templateId}`).content;
   const message = messageTemplate.cloneNode(true);
   const messageFragment = document.createDocumentFragment();
   messageFragment.appendChild(message);
   document.body.appendChild(messageFragment);
+};
+
+const showResultMessage = (templateId) => {
+  showModal(templateId);
   const btn = document.querySelector(`.${templateId}__button`);
   document.addEventListener('keydown', onModalKeydown);
   document.addEventListener('click', awayModalClick);
   btn.addEventListener('click', onModalButtonClick);
 };
 
-const alertError = (text = 'Ошибка подключения к серверу') => {
-  showResultMessage('error');
-  document.querySelector('.error__title').textContent = text;
-  document.querySelector('.error__button').remove();
+const alertError = () => {
+  showModal('error');
+  document.querySelector('.error__title').textContent = 'Ошибка подключения к серверу';
+  document.querySelector('.error__button').style.display = 'none';
 };
 
 const debounce = (callback, timeoutDelay = 500) => {
