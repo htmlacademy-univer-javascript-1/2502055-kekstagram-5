@@ -1,3 +1,5 @@
+import { isEscapeKey } from './util.js';
+
 const fullscreenContainer = document.querySelector('.big-picture');
 const containerMeta = fullscreenContainer.querySelector('.big-picture__social');
 const commentsList = containerMeta.querySelector('.social__comments');
@@ -58,7 +60,7 @@ const drawBigPicture = (url, description, likes, comments) => {
 };
 
 const onDocumentKeydown = (evt) => {
-  if (evt.key === 'Escape') {
+  if (isEscapeKey(evt)) {
     closeFullview();
   }
 };

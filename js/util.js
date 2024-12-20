@@ -36,8 +36,10 @@ const toggleButtons = (buttons, activeId) => {
   }
 };
 
+const isEscapeKey = (evt) => evt.key === 'Escape';
+
 const onModalKeydown = (evt) => {
-  if (evt.key === 'Escape') {
+  if (isEscapeKey(evt)) {
     deleteResultMessage();
   }
 };
@@ -61,25 +63,29 @@ function deleteResultMessage () {
 
 }
 
-const showResultMessage = (templateId) => {
+const showModal = (templateId) => {
   const messageTemplate = document.querySelector(`#${templateId}`).content;
   const message = messageTemplate.cloneNode(true);
   const messageFragment = document.createDocumentFragment();
   messageFragment.appendChild(message);
   document.body.appendChild(messageFragment);
+};
+
+const showResultMessage = (templateId) => {
+  showModal(templateId);
   const btn = document.querySelector(`.${templateId}__button`);
   document.addEventListener('keydown', onModalKeydown);
   document.addEventListener('click', awayModalClick);
   btn.addEventListener('click', onModalButtonClick);
 };
 
-const alertError = (text = 'Ошибка подключения к серверу') => {
-  showResultMessage('error');
-  document.querySelector('.error__title').textContent = text;
+const alertError = () => {
+  showModal('error');
+  document.querySelector('.error__title').textContent = 'Ошибка подключения к серверу';
   document.querySelector('.error__button').remove();
 };
 
-const debounce = (callback, timeoutDelay = 500) => {
+const debounce = (callback, timeoutDelay) => {
   let timeoutId;
   return (...rest) => {
     clearTimeout(timeoutId);
@@ -87,4 +93,4 @@ const debounce = (callback, timeoutDelay = 500) => {
   };
 };
 
-export {showResultMessage, alertError, takeRandomElements, toggleButtons, debounce, createRandomGenerator};
+export {showResultMessage, alertError, takeRandomElements, toggleButtons, debounce, createRandomGenerator, isEscapeKey};
