@@ -1,5 +1,6 @@
-import { uploadPhoto } from './load.js';
+import { uploadPhoto } from './server-api.js';
 import { setPreview } from './image.js';
+import { showUploadErrorMessage, showUploadSucccessMessage, isOnFocus } from './util.js';
 
 const imageForm = document.querySelector('.img-upload__form');
 const uploadModal = document.querySelector('.img-upload__overlay');
@@ -64,10 +65,10 @@ const operateScale = (evt) => {
 noUiSlider.create(slider, {
   range : {
     min : 0,
-    max : 100
+    max : 1
   },
-  step : 1,
-  start : 100,
+  step : 0.01,
+  start : 1,
   connect: 'lower'
 });
 
@@ -101,7 +102,7 @@ const onFilterClick = (evt) => {
       });
       slider.noUiSlider.on('update', () => {
         imagePreview.style.filter = `${filter.name}(${operateSliderValue(filter)})`;
-        effectLevel.value = operateSliderValue(filter) / filter.max * 100;
+        effectLevel.value = slider.noUiSlider.get() / filter.max;
       });
     } else {
       setDefaultFilter();
@@ -136,10 +137,11 @@ pristine.addValidator(hashTagsField, isCountValid, 'Слишком много х
 pristine.addValidator(hashTagsField, isUniqie, 'Повтор хэш-тега');
 pristine.addValidator(hashTagsField, validateHashTagsField, 'Невалидный хэш-тег');
 
-const isOnFocus = (elementClass) => document.activeElement.classList.contains(`${elementClass}`);
-
 const onDocumentKeydown = (evt) => {
-  if (evt.key === 'Escape' && !(isOnFocus('text__description') || isOnFocus('text__hashtags'))){
+  if (evt.key === 'Escape' &&
+    !(isOnFocus('text__description') || isOnFocus('text__hashtags')) &&
+    !document.querySelector('.error')
+  ){
     closeModal();
   }
 };
@@ -163,10 +165,12 @@ const openModal = () => {
 };
 
 function closeModal(){
+  pristine.reset();
   uploadInput.value = '';
   descriptionField.value = '';
   hashTagsField.value = '';
   scaleOutput.value = '100%';
+  imagePreview.style.transform = 'scale(1)';
   setDefaultFilter();
   uploadModal.classList.add('hidden');
   document.body.classList.remove('modal-open');
@@ -196,14 +200,18 @@ const unblockSubmitButton = () => {
   submitButton.textContent = SubmitButtonText.IDLE;
 };
 
+const onFormSubmitSuccess = () => {
+  showUploadSucccessMessage();
+  closeModal();
+};
+
 const setFormSubmit = () => {
   imageForm.addEventListener('submit', (evt) => {
     evt.preventDefault();
     const isValid = pristine.validate();
     if(isValid){
       blockSubmitButton();
-      uploadPhoto(new FormData(evt.target))
-        .then(() => closeModal())
+      uploadPhoto(new FormData(evt.target), onFormSubmitSuccess, showUploadErrorMessage)
         .finally(() => unblockSubmitButton());
     }
   });

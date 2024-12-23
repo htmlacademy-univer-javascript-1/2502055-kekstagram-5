@@ -54,6 +54,8 @@ const awayModalClick = (evt) => {
   }
 };
 
+const isOnFocus = (elementClass) => document.activeElement.classList.contains(`${elementClass}`);
+
 function deleteResultMessage () {
   const addedMessage = document.body.lastElementChild;
   addedMessage.querySelector('button').removeEventListener('click', onModalButtonClick);
@@ -79,11 +81,9 @@ const showResultMessage = (templateId) => {
   btn.addEventListener('click', onModalButtonClick);
 };
 
-const alertError = () => {
-  showModal('error');
-  document.querySelector('.error__title').textContent = 'Ошибка подключения к серверу';
-  document.querySelector('.error__button').remove();
-};
+const showUploadSucccessMessage = () => showResultMessage('success');
+const showUploadErrorMessage = () => showResultMessage('error');
+const alertLoadError = () => showModal('data-error');
 
 const debounce = (callback, timeoutDelay) => {
   let timeoutId;
@@ -93,4 +93,12 @@ const debounce = (callback, timeoutDelay) => {
   };
 };
 
-export {showResultMessage, alertError, takeRandomElements, toggleButtons, debounce, createRandomGenerator, isEscapeKey};
+export {showUploadSucccessMessage,
+  showUploadErrorMessage,
+  alertLoadError,
+  takeRandomElements,
+  toggleButtons,
+  debounce,
+  createRandomGenerator,
+  isEscapeKey,
+  isOnFocus};
