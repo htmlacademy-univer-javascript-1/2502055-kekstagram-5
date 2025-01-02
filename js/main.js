@@ -1,6 +1,6 @@
 import { getPhotos} from './server-api.js';
 import { setFormSubmit } from './form.js';
-import { addFilters } from './filters.js';
+import { addFilters } from './data-filters.js';
 import { drawPhotos } from './draw-photos.js';
 import { alertLoadError } from './util.js';
 

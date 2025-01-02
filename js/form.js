@@ -1,6 +1,24 @@
 import { uploadPhoto } from './server-api.js';
 import { setPreview } from './image.js';
-import { showUploadErrorMessage, showUploadSucccessMessage, isOnFocus } from './util.js';
+import { showUploadErrorMessage, showUploadSucccessMessage, isOnFocus, isEscapeKey, Filter } from './util.js';
+
+const FILTERS = {
+  'effect-chrome' : new Filter('grayscale', 0, 1, 0.1),
+  'effect-sepia' : new Filter('sepia', 0 , 1, 0.1),
+  'effect-marvin' : new Filter('invert', 0, 1, 0.01),
+  'effect-phobos' : new Filter('blur', 0, 3, 0.1),
+  'effect-heat' : new Filter('brightness', 1, 3, 0.1)
+};
+const SCALE_DIFFERENCE = 25;
+const MIN_SCALE = 25;
+const MAX_SCALE = 100;
+const DEFAULT_VOLUME = 100;
+const MAX_HASHTAGS_COUNT = 5;
+const HASHTAG_SAMPLE = /^#[A-Za-zА-Яа-яЁё0-9]{1,19}$/;
+const SUBMIT_BUTTON_TEXT = {
+  IDLE: 'Опубликовать',
+  SENDING: 'Публикую...'
+};
 
 const imageForm = document.querySelector('.img-upload__form');
 const uploadModal = document.querySelector('.img-upload__overlay');
@@ -9,8 +27,6 @@ const exitButton = imageForm.querySelector('.img-upload__cancel');
 const descriptionField = imageForm.querySelector('.text__description');
 const hashTagsField = imageForm.querySelector('.text__hashtags');
 const scaleOutput = imageForm.querySelector('.scale__control--value');
-const MAX_HASHTAGS_COUNT = 5;
-const HASHTAG_SAMPLE = /^#[A-Za-zА-Яа-яЁё0-9]{1,19}$/;
 const pristine = new Pristine(imageForm, {
   classTo: 'img-upload__field-wrapper',
   errorTextParent: 'img-upload__field-wrapper',
@@ -21,34 +37,9 @@ const imagePreview = imageForm.querySelector('#preview');
 const scaleAddButton = imageForm.querySelector('.scale__control--bigger');
 const scaleDecreaseButton = imageForm.querySelector('.scale__control--smaller');
 const effectLevel = imageForm.querySelector('.effect-level__value');
-const DEFAULT_VOLUME = 100;
 const filterButtonList = document.querySelector('.effects__list');
-const SCALE_DIFFERENCE = 25;
-const MIN_SCALE = 25;
-const MAX_SCALE = 100;
 const slider = document.querySelector('.effect-level__slider');
 const submitButton = document.querySelector('.img-upload__submit');
-const SubmitButtonText = {
-  IDLE: 'Опубликовать',
-  SENDING: 'Публикую...'
-};
-
-class Filter {
-  constructor(name, min, max, step) {
-    this.name = name;
-    this.min = min;
-    this.max = max;
-    this.step = step;
-  }
-}
-
-const FILTERS = {
-  'effect-chrome' : new Filter('grayscale', 0, 1, 0.1),
-  'effect-sepia' : new Filter('sepia', 0 , 1, 0.1),
-  'effect-marvin' : new Filter('invert', 0, 1, 0.01),
-  'effect-phobos' : new Filter('blur', 0, 3, 0.1),
-  'effect-heat' : new Filter('brightness', 1, 3, 0.1)
-};
 
 const operateScale = (evt) => {
   let scale = parseInt(scaleOutput.value, 10);
@@ -112,46 +103,36 @@ const onFilterClick = (evt) => {
 
 const addFilters = () => filterButtonList.addEventListener('click', onFilterClick);
 
-const validateHashTagsField = (value) => {
-  const hashtags = value.toLowerCase()
-    .split(' ')
-    .filter((x) => x);
-  return hashtags.every((tag) => HASHTAG_SAMPLE.test(tag));
-};
+const getHashtagsArray = (value) => value.toLowerCase()
+  .split(' ')
+  .filter((x) => x);
 
-const isUniqie = (value) => {
-  const hashtags = value.toLowerCase()
-    .split(' ')
-    .filter((x) => x);
+const matchHashtagsToPattern = (value) => getHashtagsArray(value).every((tag) => HASHTAG_SAMPLE.test(tag));
+
+const checkHashtagsUniqueness = (value) => {
+  const hashtags = getHashtagsArray(value);
   return new Set(hashtags).size === hashtags.length;
 };
 
-const isCountValid = (value) => {
-  const hashtags = value.toLowerCase()
-    .split(' ')
-    .filter((x) => x);
-  return hashtags.length <= MAX_HASHTAGS_COUNT;
-};
+const checkHashtagsLimit = (value) => getHashtagsArray(value).length <= MAX_HASHTAGS_COUNT;
 
-pristine.addValidator(hashTagsField, isCountValid, 'Слишком много хэш-тегов');
-pristine.addValidator(hashTagsField, isUniqie, 'Повтор хэш-тега');
-pristine.addValidator(hashTagsField, validateHashTagsField, 'Невалидный хэш-тег');
-
-const onDocumentKeydown = (evt) => {
-  if (evt.key === 'Escape' &&
-    !(isOnFocus('text__description') || isOnFocus('text__hashtags')) &&
-    !document.querySelector('.error')
-  ){
-    closeModal();
-  }
-};
-
-const validateComments = (value) => {
+const validateCommentLength = (value) => {
   value = value.trim();
   return value.length <= 140;
 };
 
-pristine.addValidator(descriptionField, validateComments, 'Комментарий длиннее 140 символов');
+pristine.addValidator(descriptionField, validateCommentLength, 'Комментарий длиннее 140 символов');
+pristine.addValidator(hashTagsField, checkHashtagsLimit, 'Слишком много хэш-тегов');
+pristine.addValidator(hashTagsField, checkHashtagsUniqueness, 'Повтор хэш-тега');
+pristine.addValidator(hashTagsField, matchHashtagsToPattern, 'Невалидный хэш-тег');
+
+const onDocumentKeydown = (evt) => {
+  if (isEscapeKey(evt) &&
+    !(isOnFocus('text__description') || isOnFocus('text__hashtags')) &&
+    !document.querySelector('.error')){
+    closeModal();
+  }
+};
 
 const openModal = () => {
   uploadModal.classList.remove('hidden');
@@ -192,12 +173,12 @@ exitButton.addEventListener('click', () => {
 
 const blockSubmitButton = () => {
   submitButton.disabled = true;
-  submitButton.textContent = SubmitButtonText.SENDING;
+  submitButton.textContent = SUBMIT_BUTTON_TEXT.SENDING;
 };
 
 const unblockSubmitButton = () => {
   submitButton.disabled = false;
-  submitButton.textContent = SubmitButtonText.IDLE;
+  submitButton.textContent = SUBMIT_BUTTON_TEXT.IDLE;
 };
 
 const onFormSubmitSuccess = () => {

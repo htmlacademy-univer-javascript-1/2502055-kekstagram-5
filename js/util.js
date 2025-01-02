@@ -1,3 +1,12 @@
+class Filter {
+  constructor(name, min, max, step) {
+    this.name = name;
+    this.min = min;
+    this.max = max;
+    this.step = step;
+  }
+}
+
 const getRandomNumber = (a, b) => {
   const lower = Math.ceil(Math.min(a, b));
   const upper = Math.floor(Math.max(a, b));
@@ -101,4 +110,5 @@ export {showUploadSucccessMessage,
   debounce,
   createRandomGenerator,
   isEscapeKey,
-  isOnFocus};
+  isOnFocus,
+  Filter};

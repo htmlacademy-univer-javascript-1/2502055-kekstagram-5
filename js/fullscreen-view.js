@@ -1,12 +1,12 @@
 import { isEscapeKey } from './util.js';
 
+const COMMENTS_PER_LOAD = 5;
 const fullscreenModal = document.querySelector('.big-picture');
 const pictureMetadata = fullscreenModal.querySelector('.big-picture__social');
 const commentsList = pictureMetadata.querySelector('.social__comments');
 const closeButton = fullscreenModal.querySelector('.big-picture__cancel');
 const commentsLoader = pictureMetadata.querySelector('.social__comments-loader');
 const currentCommentsLoaded = pictureMetadata.querySelector('.social__comment-shown-count');
-const COMMENTS_PER_LOAD = 5;
 const bigPicture = fullscreenModal.querySelector('.big-picture__img');
 let wrapper;
 
